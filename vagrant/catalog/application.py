@@ -19,7 +19,7 @@ session = DBSession()
 def landingPage():
     categories = session.query(Category).all()
 
-    return render_template('categories.html', categories=categories)
+    return render_template('landingpage.html', categories=categories)
 
 # Show all items of a specific categloy
 @app.route('/catalog/<int:category_name>/items/')
