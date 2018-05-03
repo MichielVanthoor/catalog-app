@@ -1,0 +1,30 @@
+/* General CSS */
+* {
+  font-family: "Source Sans Pro", sans-serif;
+  color: #595959;
+}
+
+/* CSS for the header section */
+header {
+  border-bottom: 1.5px solid #595959;
+  text-align: right;
+}
+
+header h1 {
+  font-size: 1.3em;
+  text-transform: uppercase;
+  margin-top: 0.7em;
+}
+
+/* CSS for the content sections */
+.content h3 {
+  font-size: 0.9em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 0.5em;
+}
+
+.content p {
+  font-size: 0.6em;
+  text-align: center;
+}
