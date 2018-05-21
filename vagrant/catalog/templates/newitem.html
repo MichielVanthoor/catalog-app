@@ -1,25 +1,24 @@
-<html>
-<body>
-<h1> New Item </h1>
+{% extends "base.html" %}
+{% block content %}
+     <!--Row for content-->
+      <div class="row content">
+        <form action="{{url_for('newItem')}}" method = 'POST'>
+            <p>Item</p>
+            <input type='text' size='30' name='name'>
+            <p>Description</p>
+            <input type='text' size='30' name='description'>
+            <p>Category</p>
+            <select name='category'>
+            {% for i in categories %}
+              <option value="{{i.name}}">{{i.name}}</option>
+            {% endfor %}
+            </select>
 
-<form action="{{url_for('newItem')}}" method = 'POST'>
-    <p>Title</p>
-    <input type='text' size='30' name='name'>
-    <p>Description</p>
-    <input type='text' size='30' name='description'>
-    <p>Category</p>
-    <input type='text' size='30' name='category'>
+            <p>
+            <input type='submit' value='Create'>
+            </p>
+        </form>
+     </div>
+{% endblock %}
 
-    <select>
-    {% for i in categories %}
-      <option value="{{i.name}}">{{i.name}}</option>
-    {% endfor %}
-    </select>
 
-    <p>
-    <input type='submit' value='Create'>
-    </p>
-</form>
-
-</body>
-</html>
