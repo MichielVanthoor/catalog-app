@@ -11,10 +11,10 @@
           </ul>
         </div>
         <div class="col-md-6">
-          <h3>Latest Items</h3>
+          <h3>{{ category }} Items ( {{ categoryitems|length }} items)</h3>
           <ul>
-          {% for item in items %}
-          <li> <a href="{{ url_for('showItem',category_name=item.category.name , item_name=item.name) }}"> {{item.name}} ({{ item.category.name }}) </a></li>
+          {% for item in categoryitems %}
+          <li> <a href="{{ url_for('showItem',category_name=item.category.name , item_name=item.name) }}"> {{item.name}} </a></li>
           {% endfor %}
           </ul>
         </div>

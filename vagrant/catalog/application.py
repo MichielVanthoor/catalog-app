@@ -10,7 +10,6 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import scoped_session
 from database_setup import Base, Category, Item
 
-
 engine = create_engine('sqlite:///catalog.db')
 Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
@@ -22,14 +21,19 @@ session = scoped_session(DBSession)
 @app.route('/catalog/')
 def landingPage():
     categories = session.query(Category).filter_by().all()
-    items = session.query(Item).filter_by().all()
+    items = session.query(Item).filter_by().order_by("timestamp desc").all()
 
     return render_template('landingpage.html', categories=categories, items=items)
 
 # Show all items of a specific category
 @app.route('/catalog/<string:category_name>/items/')
 def showCategory(category_name):
-    return 
+    categories = session.query(Category).filter_by().all()
+    category = session.query(Category).filter_by(name=category_name).one()
+    categoryitems = session.query(Item).filter_by(category_id=category.id).all()
+
+    return render_template('category.html', categories=categories,
+        category=category.name, categoryitems=categoryitems)
 
 # Show description of a specific item
 @app.route('/catalog/<string:category_name>/<string:item_name>/')
