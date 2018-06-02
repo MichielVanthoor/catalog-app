@@ -1,24 +1,23 @@
 {% extends "privatebase.html" %}
 {% block content %}
      <!--Row for content-->
-      <div class="row content">
-        <div class="col-md-12">
-          <h3>Edit item</h3>
-          <form action="{{url_for('newItem')}}" method = 'POST'>
-              <p>Name</p>
-              <input type='text' size='30' name='name' value= {{item.name}}>
-              <p>Description</p>
-              <input type='text' size='30' name='description' value= {{item.description}}>
-              <p>Category</p>
-              <select name='category'>
-                <option value="{{item.category.name}}">{{item.category.name}}</option>
-              {% for i in categories %}
-                <option value="{{i.name}}">{{i.name}}</option>
-              {% endfor %}
-              </select>
-               <p>
-              <input type='submit' value='Update'>
-              </p>
+      <div class="row">
+        <div class="col-md-8 offset-2 list-group">
+          <form action="{{url_for('editItem',item_name=item.name)}}" method = 'POST'>
+            <ul>
+              <li class="list-group-item active">Edit item</li>
+              <li class="list-group-item"><input type='text' size='30' name='name' value="{{item.name}}"></li>
+              <li class="list-group-item"><input type='text' size='30' name='description' value="{{item.description}}"></li>
+              <li class="list-group-item">
+                <select name='category'>
+                  <option value="{{item.category.name}}">{{item.category.name}}</option>
+                  {% for i in categories %}
+                  <option value="{{i.name}}">{{i.name}}</option>
+                  {% endfor %}
+                  </select>
+              </li>
+              <li class="list-group-item list-group-item-success"><input type='submit' value='Edit'></li>
+            </ul>
           </form>
         </div>
      </div>

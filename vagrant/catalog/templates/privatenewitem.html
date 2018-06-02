@@ -1,23 +1,24 @@
 {% extends "privatebase.html" %}
 {% block content %}
      <!--Row for content-->
-      <div class="row content">
-        <form action="{{url_for('newItem')}}" method = 'POST'>
-            <p>Item</p>
-            <input type='text' size='30' name='name'>
-            <p>Description</p>
-            <input type='text' size='30' name='description'>
-            <p>Category</p>
-            <select name='category'>
-            {% for i in categories %}
-              <option value="{{i.name}}">{{i.name}}</option>
-            {% endfor %}
-            </select>
-
-            <p>
-            <input type='submit' value='Create'>
-            </p>
-        </form>
+      <div class="row">
+        <div class="col-md-8 offset-2 list-group"">
+          <form action="{{url_for('newItem')}}" method = 'POST'>
+            <ul>
+              <li class="list-group-item active">Add item</li>
+              <li class="list-group-item"><input type='text' size='30' name='name' value="Item name"></li>
+              <li class="list-group-item"><input type='text' size='30' name='description' value="Item description"></li>
+              <li class="list-group-item">
+                <select name='category'>
+                  {% for i in categories %}
+                  <option value="{{i.name}}">{{i.name}}</option>
+                  {% endfor %}
+                  </select>
+              </li>
+              <li class="list-group-item list-group-item-success"><input type='submit' value='Add'></li>
+            </ul>
+          </form>
+        </div>
      </div>
 {% endblock %}
 

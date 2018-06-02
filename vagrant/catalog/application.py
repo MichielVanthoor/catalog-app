@@ -26,7 +26,7 @@ CLIENT_ID = json.loads(
 APPLICATION_NAME = "Catalog App"
 
 
-engine = create_engine('sqlite:///catalogwithusers.db')
+engine = create_engine('sqlite:///catalog.db')
 Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 session = scoped_session(DBSession)
@@ -117,6 +117,11 @@ def gconnect():
         user_id = createUser(login_session)
     login_session['user_id'] = user_id
 
+    print 'In gdisconnect access token is %s' % access_token
+    print 'User name & ID is: '
+    print login_session['username']
+    print login_session['user_id']
+
     output = ''
     output += '<h1>Welcome, '
     output += login_session['username']
@@ -125,7 +130,6 @@ def gconnect():
     output += login_session['picture']
     output += ' " style = "width: 100px; height: 100px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
     flash("you are now logged in as %s" % login_session['username'])
-    print "done!"
     return output
 
 # Disconnect using Google OAuth
@@ -138,7 +142,7 @@ def gdisconnect():
         response.headers['Content-Type'] = 'application/json'
         return response
     print 'In gdisconnect access token is %s' % access_token
-    print 'User name is: '
+    print 'Disconnected user name is: '
     print login_session['username']
     requests.post('https://accounts.google.com/o/oauth2/revoke',
     params={'token': access_token},
@@ -150,7 +154,7 @@ def gdisconnect():
     del login_session['email']
     del login_session['picture']
 
-    return redirect('landingPage')
+    return redirect(url_for('landingPage'))
 
 # User Helper Functions
 def createUser(login_session):
@@ -238,18 +242,20 @@ def editItem(item_name):
     item = session.query(Item).filter_by(name=item_name).one()
     categories = session.query(Category).all()
 
-#TODO add limiter
-#TODO items are not edited but deleted...
+    print item.user_id
+    print login_session['user_id']
 
     if 'username' not in login_session:
       return redirect('/login')
-
+    if item.user_id != login_session['user_id']:
+        return "<script>function myFunction() {window.location.href = '/catalog'; alert('You are not authorized to edit this item. Please create your own item in order to edit.');}</script><body onload='myFunction()''>"
     if request.method == 'POST':
         item.name = request.form['name']
         item.description = request.form['description']
         post_category = request.form['category']
         category = session.query(Category).filter_by(name=post_category).one()
         item.category = category
+
         session.add(item)
         session.commit()
         return redirect(url_for('showItem', category_name=category.name, item_name=item.name))
@@ -263,10 +269,10 @@ def editItem(item_name):
 @app.route('/catalog/<string:item_name>/delete/', methods=['GET', 'POST'])
 def deleteItem(item_name):
     item = session.query(Item).filter_by(name=item_name)[0]
-#TODO add limiter
     if 'username' not in login_session:
       return redirect('/login')
-
+    if item.user_id != login_session['user_id']:
+        return "<script>function myFunction() {window.location.href = '/catalog'; alert('You are not authorized to delete this item. Please create your own item in order to delete.');}</script><body onload='myFunction()''>"
     if request.method == 'POST':
         session.delete(item)
         session.commit()
