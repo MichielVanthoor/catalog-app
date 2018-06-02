@@ -2,7 +2,9 @@
 {% block content %}
      <!--Row for content-->
       <div class="row">
-        <div id="signinButton">
+        <div class="col-md-4 offset-4 list-group" id="signinButton">
+        <ul>
+          <li class="list-group-item">
           <span class="g-signin"
             data-scope="openid email"
             data-clientid="376874315156-9tcv39hkt8bm565cflaj3mmmrnpj4q8t.apps.googleusercontent.com"
@@ -12,9 +14,10 @@
             data-callback="signInCallback"
             data-approvalprompt="force">
           </span>
-        </div>
+          </li>
+        </ul>
+      </div>
      </div>
-
      <div id="result"></div>
 
 <script>

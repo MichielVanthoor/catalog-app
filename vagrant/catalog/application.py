@@ -1,26 +1,23 @@
+# Import dependencies for Flask, OAuth2.0 and database ORM
+import httplib2
+import json
+import random
+import requests
+import string
+
+from database_setup import Base, Category, Item, User
 from datetime import datetime
-
-# Flask config and intialization
-from flask import Flask, render_template, request, redirect, url_for, jsonify, flash
-app = Flask(__name__)
-
-# Database ORM config and session creation
+from flask import Flask, render_template, request,\
+  redirect, url_for, jsonify, flash, make_response
+from flask import session as login_session
+from oauth2client.client import flow_from_clientsecrets
+from oauth2client.client import FlowExchangeError
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import scoped_session
-from database_setup import Base, Category, Item, User
 
-# Auth2.0
-from flask import session as login_session
-import random
-import string
-from oauth2client.client import flow_from_clientsecrets
-from oauth2client.client import FlowExchangeError
-import httplib2
-import json
-from flask import make_response
-import requests
-
+# Initialize Flask app and get OAuth credentials
+app = Flask(__name__)
 CLIENT_ID = json.loads(
     open('client_secrets.json', 'r').read())['web']['client_id']
 APPLICATION_NAME = "Catalog App"
@@ -31,6 +28,7 @@ Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 session = scoped_session(DBSession)
 
+
 # Create anti-forgery state token
 @app.route('/login/')
 def showLogin():
@@ -38,6 +36,7 @@ def showLogin():
                     for x in xrange(32))
     login_session['state'] = state
     return render_template('login.html', STATE=state)
+
 
 # Connect using Google OAuth
 @app.route('/gconnect', methods=['POST'])
@@ -92,7 +91,8 @@ def gconnect():
     stored_access_token = login_session.get('access_token')
     stored_gplus_id = login_session.get('gplus_id')
     if stored_access_token is not None and gplus_id == stored_gplus_id:
-        response = make_response(json.dumps('Current user is already connected.'),
+        response = make_response(
+                                 json.dumps('Current user already connected.'),
                                  200)
         response.headers['Content-Type'] = 'application/json'
         return response
@@ -112,7 +112,7 @@ def gconnect():
     login_session['picture'] = data['picture']
     login_session['email'] = data['email']
 
-    user_id =getUserID(login_session['email'])
+    user_id = getUserID(login_session['email'])
     if not user_id:
         user_id = createUser(login_session)
     login_session['user_id'] = user_id
@@ -128,9 +128,12 @@ def gconnect():
     output += '!</h1>'
     output += '<img src="'
     output += login_session['picture']
-    output += ' " style = "width: 100px; height: 100px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+    output += '" style = "width: 100px; height: ' \
+              + '100px;border-radius: 150px;-webkit-border-radius: 150px;' \
+              + '-moz-border-radius: 150px;">'
     flash("you are now logged in as %s" % login_session['username'])
     return output
+
 
 # Disconnect using Google OAuth
 @app.route('/gdisconnect')
@@ -138,15 +141,16 @@ def gdisconnect():
     access_token = login_session.get('access_token')
     if access_token is None:
         print 'Access Token is None'
-        response = make_response(json.dumps('Current user not connected.'), 401)
+        response = make_response(json.dumps('Current user not connected'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
     print 'In gdisconnect access token is %s' % access_token
     print 'Disconnected user name is: '
     print login_session['username']
     requests.post('https://accounts.google.com/o/oauth2/revoke',
-    params={'token': access_token},
-    headers = {'content-type': 'application/x-www-form-urlencoded'})
+                  params={'token': access_token},
+                  headers={'content-type':
+                           'application/x-www-form-urlencoded'})
 
     del login_session['access_token']
     del login_session['gplus_id']
@@ -155,6 +159,7 @@ def gdisconnect():
     del login_session['picture']
 
     return redirect(url_for('landingPage'))
+
 
 # User Helper Functions
 def createUser(login_session):
@@ -165,9 +170,11 @@ def createUser(login_session):
     user = session.query(User).filter_by(email=login_session['email']).one()
     return user.id
 
+
 def getUserInfo(user_id):
     user = session.query(User).filter_by(id=user_id).one()
     return user
+
 
 def getUserID(email):
     try:
@@ -175,6 +182,7 @@ def getUserID(email):
         return user.id
     except:
         return None
+
 
 # Routing of our application
 # Landing page with all categories and list of recently added Items
@@ -185,23 +193,33 @@ def landingPage():
     items = session.query(Item).filter_by().order_by("timestamp desc").all()
 
     if 'username' not in login_session:
-        return render_template('landingpage.html', categories=categories, items=items)
+        return render_template('landingpage.html',
+                               categories=categories,
+                               items=items)
     else:
-        return render_template('privatelandingpage.html', categories=categories, items=items)
+        return render_template('privatelandingpage.html',
+                               categories=categories,
+                               items=items)
+
 
 # Show all items of a specific category
 @app.route('/catalog/<string:category_name>/items/')
 def showCategory(category_name):
     categories = session.query(Category).filter_by().all()
     category = session.query(Category).filter_by(name=category_name).one()
-    categoryitems = session.query(Item).filter_by(category_id=category.id).all()
+    catitems = session.query(Item).filter_by(category_id=category.id).all()
 
     if 'username' not in login_session:
-        return render_template('category.html', categories=categories,
-        category=category.name, categoryitems=categoryitems)
+        return render_template('category.html',
+                               categories=categories,
+                               category=category.name,
+                               categoryitems=catitems)
     else:
-        return render_template('privatecategory.html', categories=categories,
-        category=category.name, categoryitems=categoryitems)
+        return render_template('privatecategory.html',
+                               categories=categories,
+                               category=category.name,
+                               categoryitems=catitems)
+
 
 # Show description of a specific item
 @app.route('/catalog/<string:category_name>/<string:item_name>/')
@@ -218,23 +236,27 @@ def showItem(category_name, item_name):
 @app.route('/catalog/new/', methods=['GET', 'POST'])
 def newItem():
     if 'username' not in login_session:
-      return redirect('/login')
+        return redirect('/login')
     if request.method == 'POST':
         post_name = request.form['name']
         post_description = request.form['description']
         post_category = request.form['category']
         category = session.query(Category).filter_by(name=post_category).one()
         timestamp = unicode(datetime.now())
-        newItem = Item(
-            name=post_name, description=post_description,
-            timestamp=timestamp, category_id=category.id, user_id=login_session['user_id'])
+        newItem = Item(name=post_name, description=post_description,
+                       timestamp=timestamp,
+                       category_id=category.id,
+                       user_id=login_session['user_id'])
         session.add(newItem)
         session.commit()
-        return redirect(url_for('showItem', category_name=category.name, item_name=newItem.name))
+        return redirect(url_for('showItem',
+                                category_name=category.name,
+                                item_name=newItem.name))
     else:
         categories = session.query(Category).filter_by().all()
 
         return render_template('privatenewitem.html', categories=categories)
+
 
 # Edit item information after authentication
 @app.route('/catalog/<string:item_name>/edit/', methods=['GET', 'POST'])
@@ -246,9 +268,13 @@ def editItem(item_name):
     print login_session['user_id']
 
     if 'username' not in login_session:
-      return redirect('/login')
+        return redirect('/login')
     if item.user_id != login_session['user_id']:
-        return "<script>function myFunction() {window.location.href = '/catalog'; alert('You are not authorized to edit this item. Please create your own item in order to edit.');}</script><body onload='myFunction()''>"
+        return "<script>function myFunction()" \
+                + "{window.location.href = '/catalog';" \
+                + "alert('You are not authorized to edit this item." \
+                + "Please create your own item in order to edit.');}" \
+                + "</script><body onload='myFunction()''>"
     if request.method == 'POST':
         item.name = request.form['name']
         item.description = request.form['description']
@@ -258,11 +284,14 @@ def editItem(item_name):
 
         session.add(item)
         session.commit()
-        return redirect(url_for('showItem', category_name=category.name, item_name=item.name))
+        return redirect(url_for('showItem',
+                                category_name=category.name,
+                                item_name=item.name))
 
     else:
-      return render_template('privateedititem.html', item=item, categories=categories)
-
+        return render_template('privateedititem.html',
+                               item=item,
+                               categories=categories)
 
 
 # Delete item information after authentication
@@ -270,16 +299,20 @@ def editItem(item_name):
 def deleteItem(item_name):
     item = session.query(Item).filter_by(name=item_name)[0]
     if 'username' not in login_session:
-      return redirect('/login')
+        return redirect('/login')
     if item.user_id != login_session['user_id']:
-        return "<script>function myFunction() {window.location.href = '/catalog'; alert('You are not authorized to delete this item. Please create your own item in order to delete.');}</script><body onload='myFunction()''>"
+        return "<script>function myFunction()" \
+                + "{window.location.href = '/catalog';" \
+                + "alert('You are not authorized to delete this item." \
+                + "Please create your own item in order to delete.');}" \
+                + "</script><body onload='myFunction()''>"
     if request.method == 'POST':
         session.delete(item)
         session.commit()
         return redirect(url_for('landingPage'))
 
     else:
-      return render_template('privatedeleteitem.html', item=item)
+        return render_template('privatedeleteitem.html', item=item)
 
 
 # JSON endpoint
