@@ -1,3 +1,19 @@
+#!/usr/bin/env python
+
+"""
+    This module entails a Catalog application.
+    It implements CRUD functionality to communicate with a database
+    and a front-end to execute this commands a web interface.
+    The application has ability to authencicate Users
+    and limit permissions accordingly.
+
+    __author__ = "Michiel Vanthoor"
+    __version__ = "1.0"
+    __date__ = "06/03/2018"
+
+"""
+
+
 # Import dependencies for Flask, OAuth2.0 and database ORM
 import httplib2
 import json
@@ -27,18 +43,18 @@ DBSession = sessionmaker(bind=engine)
 session = scoped_session(DBSession)
 
 
-# Create anti-forgery state token
 @app.route('/login/')
 def showLogin():
+    """Create anti-forgery state token and render login page"""
     state = ''.join(random.choice(string.ascii_uppercase + string.digits)
                     for x in xrange(32))
     login_session['state'] = state
     return render_template('login.html', STATE=state)
 
 
-# Connect using Google OAuth
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
+    """Authenticate User using Google OAuth"""
     # Validate state token
     if request.args.get('state') != login_session['state']:
         response = make_response(json.dumps('Invalid state parameter.'), 401)
@@ -133,9 +149,9 @@ def gconnect():
     return output
 
 
-# Disconnect using Google OAuth
 @app.route('/gdisconnect')
 def gdisconnect():
+    """Revoke Google OAuth authentication"""
     access_token = login_session.get('access_token')
     if access_token is None:
         print 'Access Token is None'
@@ -159,8 +175,8 @@ def gdisconnect():
     return redirect(url_for('landingPage'))
 
 
-# User Helper Functions
 def createUser(login_session):
+    """Create a new User based on login_session details"""
     newUser = User(name=login_session['username'], email=login_session[
                    'email'], picture=login_session['picture'])
     session.add(newUser)
@@ -170,11 +186,13 @@ def createUser(login_session):
 
 
 def getUserInfo(user_id):
+    """Get info of a certain User after providing user_id"""
     user = session.query(User).filter_by(id=user_id).one()
     return user
 
 
 def getUserID(email):
+    """Get user_id of a certain User after providing email"""
     try:
         user = session.query(User).filter_by(email=email).one()
         return user.id
@@ -182,11 +200,10 @@ def getUserID(email):
         return None
 
 
-# Routing of our application
-# Landing page with all categories and list of recently added Items
 @app.route('/')
 @app.route('/catalog/')
 def landingPage():
+    """Render landing page with all categories and recently added Items"""
     categories = session.query(Category).filter_by().all()
     items = session.query(Item).filter_by().order_by("timestamp desc").all()
 
@@ -200,9 +217,9 @@ def landingPage():
                                items=items)
 
 
-# Show all items of a specific category
 @app.route('/catalog/<string:category_name>/items/')
 def showCategory(category_name):
+    """Render page that shows all items of a specific category"""
     categories = session.query(Category).filter_by().all()
     category = session.query(Category).filter_by(name=category_name).one()
     catitems = session.query(Item).filter_by(category_id=category.id).all()
@@ -219,9 +236,9 @@ def showCategory(category_name):
                                categoryitems=catitems)
 
 
-# Show description of a specific item
 @app.route('/catalog/<string:category_name>/<string:item_name>/')
 def showItem(category_name, item_name):
+    """Render page that shows all info about an item"""
     item = session.query(Item).filter_by(name=item_name)[0]
 
     if 'username' not in login_session:
@@ -230,9 +247,9 @@ def showItem(category_name, item_name):
         return render_template('privateitem.html', item=item)
 
 
-# Add new item information after authentication
 @app.route('/catalog/new/', methods=['GET', 'POST'])
 def newItem():
+    """Render page to create a new Item if authorized"""
     if 'username' not in login_session:
         return redirect('/login')
     if request.method == 'POST':
@@ -256,14 +273,11 @@ def newItem():
         return render_template('privatenewitem.html', categories=categories)
 
 
-# Edit item information after authentication
 @app.route('/catalog/<string:item_name>/edit/', methods=['GET', 'POST'])
 def editItem(item_name):
+    """Render page to edit an Item if authorized"""
     item = session.query(Item).filter_by(name=item_name).one()
     categories = session.query(Category).all()
-
-    print item.user_id
-    print login_session['user_id']
 
     if 'username' not in login_session:
         return redirect('/login')
@@ -292,9 +306,9 @@ def editItem(item_name):
                                categories=categories)
 
 
-# Delete item information after authentication
 @app.route('/catalog/<string:item_name>/delete/', methods=['GET', 'POST'])
 def deleteItem(item_name):
+    """Render page to delete an Item if authorized"""
     item = session.query(Item).filter_by(name=item_name)[0]
     if 'username' not in login_session:
         return redirect('/login')
@@ -313,9 +327,9 @@ def deleteItem(item_name):
         return render_template('privatedeleteitem.html', item=item)
 
 
-# JSON endpoint
 @app.route('/catalog.json/')
 def json_endpoint():
+    """Provide JSON enfd-point with all Item info"""
     items = session.query(Item).all()
     return jsonify(Items=[i.serialize for i in items])
 
