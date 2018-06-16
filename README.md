@@ -1,5 +1,9 @@
 Catalog Application
 =============
+
+CRUD application with sqlite database and authentication functionality
+
+
 Steps to launch:
 
 1. Install Vagrant and VirtualBox.
